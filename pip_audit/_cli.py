@@ -97,7 +97,7 @@ class VulnerabilityDescriptionChoice(str, enum.Enum):
         elif self is VulnerabilityDescriptionChoice.Off:
             return False
         elif self is VulnerabilityDescriptionChoice.Auto:
-            return bool(format_.value is OutputFormatChoice.Json)
+            return format_.value is OutputFormatChoice.Json
         else:
             assert_never(self)
 
@@ -385,7 +385,7 @@ def audit() -> None:
 
         # If the `--fix` flag has been applied, find a set of suitable fix versions and upgrade the
         # dependencies at the source
-        fixes = list()
+        fixes = []
         fixed_pkg_count = 0
         fixed_vuln_count = 0
         if args.fix:

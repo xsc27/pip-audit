@@ -38,8 +38,7 @@ def _get_pip_cache() -> Path:
     except subprocess.CalledProcessError as cpe:  # pragma: no cover
         raise ServiceError(f"Failed to query the `pip` HTTP cache directory: {cmd}") from cpe
     cache_dir = process.stdout.decode("utf-8").strip("\n")
-    http_cache_dir = Path(cache_dir) / "http"
-    return http_cache_dir
+    return Path(cache_dir) / "http"
 
 
 def _get_cache_dir(custom_cache_dir: Optional[Path], *, use_pip: bool = True) -> Path:
@@ -53,18 +52,16 @@ def _get_cache_dir(custom_cache_dir: Optional[Path], *, use_pip: bool = True) ->
     if custom_cache_dir is not None:
         return custom_cache_dir
 
-    if use_pip:
-        pip_cache_dir = _get_pip_cache() if _PIP_VERSION >= _MINIMUM_PIP_VERSION else None
-        if pip_cache_dir is not None:
-            return pip_cache_dir
-        else:
-            logger.warning(
-                f"Warning: pip {_PIP_VERSION} doesn't support the `cache dir` subcommand, "
-                f"using {_PIP_AUDIT_INTERNAL_CACHE} instead"
-            )
-            return _PIP_AUDIT_INTERNAL_CACHE
-    else:
+    if not use_pip:
         return _PIP_AUDIT_INTERNAL_CACHE
+    pip_cache_dir = _get_pip_cache() if _PIP_VERSION >= _MINIMUM_PIP_VERSION else None
+    if pip_cache_dir is not None:
+        return pip_cache_dir
+    logger.warning(
+        f"Warning: pip {_PIP_VERSION} doesn't support the `cache dir` subcommand, "
+        f"using {_PIP_AUDIT_INTERNAL_CACHE} instead"
+    )
+    return _PIP_AUDIT_INTERNAL_CACHE
 
 
 class _SafeFileCache(FileCache):

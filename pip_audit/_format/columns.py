@@ -58,21 +58,18 @@ class ColumnsFormat(VulnerabilityFormat):
 
         See `VulnerabilityFormat.format`.
         """
-        vuln_data: List[List[Any]] = []
         header = ["Name", "Version", "ID", "Fix Versions"]
         if fixes:
             header.append("Applied Fix")
         if self.output_desc:
             header.append("Description")
-        vuln_data.append(header)
+        vuln_data: List[List[Any]] = [header]
         for dep, vulns in result.items():
             if dep.is_skipped():
                 continue
             dep = cast(service.ResolvedDependency, dep)
             applied_fix = next((f for f in fixes if f.dep == dep), None)
-            for vuln in vulns:
-                vuln_data.append(self._format_vuln(dep, vuln, applied_fix))
-
+            vuln_data.extend(self._format_vuln(dep, vuln, applied_fix) for vuln in vulns)
         columns_string = str()
 
         # If it's just a header, don't bother adding it to the output
@@ -80,7 +77,7 @@ class ColumnsFormat(VulnerabilityFormat):
             vuln_strings, sizes = tabulate(vuln_data)
 
             # Create and add a separator.
-            if len(vuln_data) > 0:
+            if vuln_data:
                 vuln_strings.insert(1, " ".join(map(lambda x: "-" * x, sizes)))
 
             for row in vuln_strings:
@@ -88,11 +85,9 @@ class ColumnsFormat(VulnerabilityFormat):
                     columns_string += "\n"
                 columns_string += row
 
-        # Now display the skipped dependencies
-        skip_data: List[List[Any]] = []
         skip_header = ["Name", "Skip Reason"]
 
-        skip_data.append(skip_header)
+        skip_data: List[List[Any]] = [skip_header]
         for dep, _ in result.items():
             if dep.is_skipped():
                 dep = cast(service.SkippedDependency, dep)

@@ -26,14 +26,16 @@ def test_plurals(capsys, monkeypatch, args, vuln_count, pkg_count, expected):
         (
             pretend.stub(
                 is_skipped=lambda: False,
-                name="something" + str(i),
-                canonical_name="something" + str(i),
+                name=f"something{str(i)}",
+                canonical_name=f"something{str(i)}",
                 version=1,
             ),
-            [pretend.stub(fix_versions=[2], id="foo")] * (vuln_count // pkg_count),
+            [pretend.stub(fix_versions=[2], id="foo")]
+            * (vuln_count // pkg_count),
         )
         for i in range(pkg_count)
     ]
+
 
     auditor = pretend.stub(audit=lambda a: result)
     monkeypatch.setattr(pip_audit._cli, "Auditor", lambda *a, **kw: auditor)

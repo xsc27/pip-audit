@@ -77,8 +77,11 @@ class ResolveLibResolver(DependencyResolver):
             return [SkippedDependency(name=req.name, skip_reason=skip_reason)]
         except HTTPError as e:
             raise ResolveLibResolverError("failed to resolve dependencies") from e
-        for name, candidate in result.mapping.items():
-            deps.append(ResolvedDependency(name, candidate.version))
+        deps.extend(
+            ResolvedDependency(name, candidate.version)
+            for name, candidate in result.mapping.items()
+        )
+
         return deps
 
 

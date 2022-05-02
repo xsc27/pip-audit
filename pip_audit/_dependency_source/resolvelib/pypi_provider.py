@@ -71,13 +71,15 @@ class Candidate:
         self._metadata: Optional[EmailMessage] = None
         self._dependencies: Optional[List[Requirement]] = None
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self):    # pragma: no cover
         """
         A string representation for `Candidate`.
         """
-        if not self.extras:
-            return f"<{self.name}=={self.version} wheel={self.is_wheel}>"
-        return f"<{self.name}[{','.join(self.extras)}]=={self.version} wheel={self.is_wheel}>"
+        return (
+            f"<{self.name}[{','.join(self.extras)}]=={self.version} wheel={self.is_wheel}>"
+            if self.extras
+            else f"<{self.name}=={self.version} wheel={self.is_wheel}>"
+        )
 
     @property
     def metadata(self) -> EmailMessage:
@@ -99,7 +101,7 @@ class Candidate:
         Computes the dependency set for this candidate.
         """
         deps: List[str] = self.metadata.get_all("Requires-Dist", [])
-        extras = self.extras if self.extras else [""]
+        extras = self.extras or [""]
 
         for d in deps:
             r = Requirement(d)
@@ -195,7 +197,7 @@ def get_project_from_index(
     index_url: str, session, project, extras, timeout: Optional[int], state: AuditState
 ) -> Iterator[Candidate]:
     """Return candidates from an index created from the project name and extras."""
-    url = index_url + "/" + project
+    url = f"{index_url}/{project}"
     response: requests.Response = session.get(url, timeout=timeout)
     if response.status_code == 404:
         raise PyPINotFoundError
@@ -204,9 +206,7 @@ def get_project_from_index(
     doc = html5lib.parse(data, namespaceHTMLElements=False)
     for i in doc.findall(".//a"):
         url = i.attrib["href"]
-        py_req = i.attrib.get("data-requires-python")
-        # Skip items that need a different Python version
-        if py_req:
+        if py_req := i.attrib.get("data-requires-python"):
             spec = SpecifierSet(py_req)
             if PYTHON_VERSION not in spec:
                 continue

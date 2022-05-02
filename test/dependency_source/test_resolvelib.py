@@ -40,11 +40,12 @@ def check_deps(resolved_deps: List[ResolvedDependency], expected_deps: List[Reso
     #   published. Therefore, our check should make sure that the resolved version is greater than
     #   or equal to the expected version.
     for expected in expected_deps:
-        found = False
-        for resolved in resolved_deps:
-            if expected.name == resolved.name and expected.version <= resolved.version:
-                found = True
-                break
+        found = any(
+            expected.name == resolved.name
+            and expected.version <= resolved.version
+            for resolved in resolved_deps
+        )
+
         assert found
 
 
@@ -362,9 +363,8 @@ def test_resolvelib_multiple_indexes(monkeypatch):
     def get_multiple_index_package_mock(url):
         if url == package_url1:
             return get_package_mock(data1)
-        else:
-            assert url == package_url2
-            return get_package_mock(data2)
+        assert url == package_url2
+        return get_package_mock(data2)
 
     resolver = resolvelib.ResolveLibResolver([url1, url2])
     monkeypatch.setattr(
@@ -406,11 +406,10 @@ def test_resolvelib_package_missing_on_one_index(monkeypatch):
     def get_multiple_index_package_mock(url):
         if url == package_url1:
             return get_package_mock(data1)
-        else:
-            assert url == package_url2
-            pkg = get_package_mock(str())
-            pkg.status_code = 404
-            return pkg
+        assert url == package_url2
+        pkg = get_package_mock(str())
+        pkg.status_code = 404
+        return pkg
 
     resolver = resolvelib.ResolveLibResolver([url1, url2])
     monkeypatch.setattr(

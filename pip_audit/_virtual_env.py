@@ -116,9 +116,10 @@ class VirtualEnv(venv.EnvBuilder):
         package_list = json.loads(stdout)
 
         # Convert into a series of name, version pairs
-        self._packages = []
-        for package in package_list:
-            self._packages.append((package["name"], Version(package["version"])))
+        self._packages = [
+            (package["name"], Version(package["version"]))
+            for package in package_list
+        ]
 
     @property
     def installed_packages(self) -> Iterator[Tuple[str, Version]]:

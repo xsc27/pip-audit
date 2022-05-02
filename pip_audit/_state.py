@@ -133,9 +133,9 @@ class AuditSpinner(_StateActor, BaseSpinner):  # pragma: no cover
 
         columns, _ = os.get_terminal_size(self.file.fileno())
         if columns > 4 and len(line) >= columns:
-            line = f"{line[0:columns - 4]} ..."
+            line = f"{line[:columns - 4]} ..."
         else:
-            line = line[0:columns]
+            line = line[:columns]
 
         self.writeln(line)
 
